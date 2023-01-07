@@ -1,3 +1,4 @@
+import math
 import random
 
 import pygame
@@ -188,40 +189,70 @@ class Game:
         ball_right_edge = ball_x + ball_radius
 
         ball_velocity_x, ball_velocity_y = self.ball.get_velocity()
+        ball_velocity = math.sqrt(ball_velocity_x**2 + ball_velocity_y**2)
+
+        # paddle variables
+        middle_of_paddle_x = self.paddle.get_pos()[0] + self.paddle.get_width() / 2
+
+        # ball position from iddle
+        # positive is right side
+        # negative is left side
+        ball_pos_from_middle_of_paddle = ball_x - middle_of_paddle_x
+        percentage_from_middle = ball_pos_from_middle_of_paddle / (
+            self.paddle.get_width() / 2
+        )
+        angle_percentage = percentage_from_middle * 90
+
+        # calculate the x and y from velocity and angle
+        new_x_vel = math.sin(math.radians(angle_percentage)) * ball_velocity
+        new_y_vel = math.cos(math.radians(angle_percentage)) * ball_velocity
 
         # if bottom of ball collides with paddle
         if (
             self.paddle.collide_point((ball_x, ball_bottom_edge))
             and ball_velocity_y > 0
         ):
+            self.ball.set_velocity(new_x_vel, new_y_vel)
             self.ball.reverse_y_velocity()
-            self.ball.randomize_x_velocity()
 
         # check if ball collides with brick
-        for brick in self.bricks:
-            # if collides with bottom of brick
-            if brick.collide_point((ball_x, ball_top_edge)) and ball_velocity_y < 0:
-                self.ball.reverse_y_velocity()
-                self.bricks.remove(brick)
-                self.check_increase_ball_speed()
+        try:
+            for brick in self.bricks:
+                # if collides with bottom of brick
+                if brick.collide_point((ball_x, ball_top_edge)) and ball_velocity_y < 0:
+                    self.ball.reverse_y_velocity()
+                    self.bricks.remove(brick)
+                    self.check_increase_ball_speed()
 
-            # if collids with top of brick
-            if brick.collide_point((ball_x, ball_bottom_edge)) and ball_velocity_y > 0:
-                self.ball.reverse_y_velocity()
-                self.bricks.remove(brick)
-                self.check_increase_ball_speed()
+                # if collids with top of brick
+                if (
+                    brick.collide_point((ball_x, ball_bottom_edge))
+                    and ball_velocity_y > 0
+                ):
+                    self.ball.reverse_y_velocity()
+                    self.bricks.remove(brick)
+                    self.check_increase_ball_speed()
 
-            # if colide with left side of brick
-            if brick.collide_point((ball_left_edge, ball_y)) and ball_velocity_x < 0:
-                self.ball.reverse_x_velocity()
-                self.bricks.remove(brick)
-                self.check_increase_ball_speed()
+                # if colide with left side of brick
+                if (
+                    brick.collide_point((ball_left_edge, ball_y))
+                    and ball_velocity_x < 0
+                ):
+                    self.ball.reverse_x_velocity()
+                    self.bricks.remove(brick)
+                    self.check_increase_ball_speed()
 
-            # if collide with right side of brick
-            if brick.collide_point((ball_right_edge, ball_y)) and ball_velocity_x > 0:
-                self.ball.reverse_x_velocity()
-                self.bricks.remove(brick)
-                self.check_increase_ball_speed()
+                # if collide with right side of brick
+                if (
+                    brick.collide_point((ball_right_edge, ball_y))
+                    and ball_velocity_x > 0
+                ):
+                    self.ball.reverse_x_velocity()
+                    self.bricks.remove(brick)
+                    self.check_increase_ball_speed()
+
+        except ValueError:
+            print("That brick doesn't exist!")
 
     def draw(self):
         """Draws the game objects to the screen"""
